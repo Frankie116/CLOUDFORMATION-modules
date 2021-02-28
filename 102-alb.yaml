@@ -10,10 +10,12 @@
 # 100-vpc.yaml
 
 AWSTemplateFormatVersion: 2010-09-09
-
 Description: This template creates an ALB
 
+
+
 Metadata:
+
   AWS::CloudFormation::Interface: 
     ParameterGroups:
       - 
@@ -22,13 +24,18 @@ Metadata:
         Parameters:
           - ExportVpcStackName
 
+
+
 Parameters:
+
   ExportVpcStackName:
     Description: The name of the vpc stack that exports values
     Type: String
 
+
+
 Resources:
-#Create an Application Load Balancer
+
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -39,7 +46,6 @@ Resources:
         - Fn::ImportValue: !Sub ${ExportVpcStackName}-PublicSubnet1
         - Fn::ImportValue: !Sub ${ExportVpcStackName}-PublicSubnet2
 
-#Create a Listener on Port 80
   ALBListenerNoSslCertificate:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
     Properties:
@@ -49,7 +55,6 @@ Resources:
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: 80
       Protocol: HTTP
-
 
   ALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -67,22 +72,22 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub ${ExportVpcStackName}-VPC
 
+
+
 Outputs:
-# Export Target Group
+
   ALBTargetGroup:
     Description: Webserver target group
     Export:
       Name: !Sub ${AWS::StackName}-ALBTargetGroup
     Value: !Ref ALBTargetGroup
 
-# Export Application Load Balancer Dns Name
   ApplicationLoadBalancerDnsName:
     Description: Application Load Balancer DNS Name
     Export:
       Name: !Sub ${AWS::StackName}-ApplicationLoadBalancerDnsName
     Value: !GetAtt ApplicationLoadBalancer.DNSName
 
-# Export Application Load Balancer Zone ID
   ApplicationLoadBalancerZoneID:
     Description: Application Load Balancer Canonical Hosted Zone ID
     Export:

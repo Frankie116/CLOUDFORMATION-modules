@@ -10,7 +10,10 @@
 
 Description: This template creates a simple 'hello world' application hosted on a single ec2 instance in a public subnet in the default vpc.
 
+
+
 Mappings: 
+
   AWSRegionToAMI:
         us-east-1:
             AMI: ami-0915bcb5fa77e4892
@@ -44,23 +47,34 @@ Mappings:
             AMI: ami-02a6bfdcf8224bd77
         sa-east-1:
             AMI: ami-0a0bc0fa94d632c94
-            
+
+
+           
 Parameters:
+
     ExportVpcStackName:
         Description: The name of the vpc stack that exports values
         Type: String
 
-Resources:
-  MyServer:
+
+
+Resources:  
+
+  WebServer:
     Type: AWS::EC2::Instance
     Properties:
       ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
       InstanceType: t2.micro
-      SubnetId: 10.0.2.0/24
-        # - Fn::ImportValue: !Sub ${ExportVpcStackName}-PrivateSubnet1
-      SecurityGroupIds:
-        # - !Ref MyServerSecurityGroup
-        - Fn::ImportValue: !Sub ${ExportVpcStackName}-WebServerSecurityGroup
+      NetworkInterfaces:
+      - GroupSet:
+        - Fn::ImportValue:
+            Fn::Sub: "${ExportVpcStackName}-PublicHTTPSecurityGroup"
+        AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        DeleteOnTermination: 'true'
+        SubnetId:
+          Fn::ImportValue:
+            Fn::Sub: "${ExportVpcStackName}-PublicSubnet1"
       UserData: 
         Fn::Base64: |
           #!/bin/bash
@@ -70,17 +84,10 @@ Resources:
           systemctl enable httpd.service
           echo "<h1>Hello World from $(hostname -f) </h1>" > /var/www/html/index.html      
 
-#   MyServerSecurityGroup:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupDescription: SSH and HTTP
-#       SecurityGroupIngress:
-#       - CidrIp: 0.0.0.0/0
-#         FromPort: 80
-#         IpProtocol: tcp
-#         ToPort: 80
+
 
 Outputs:
+
   PublicIP:
     Description: Public IP address of the newly created EC2 instance
-    Value: !Sub http://${MyServer.PublicIp} 
+    Value: !Sub http://${WebServer.PublicIp} 
