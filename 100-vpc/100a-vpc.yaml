@@ -2,14 +2,14 @@
 # ---------------------------------------------------------------------------------------------------
 # version  1.0
 # Library: https://github.com/Frankie116/my-library.git
-# Creates a VPC with various resources
+# Creates a VPC with 2 public & 2 private subnets
 # ---------------------------------------------------------------------------------------------------
 
 # req:
 # none
 
 AWSTemplateFormatVersion: 2010-09-09
-Description: This template creates a vpc with public and private subnets
+Description: This template creates a vpc with 2 public and 2 private subnets.  The code is part of a standard modular infrastructure library.
 
 
 
@@ -131,7 +131,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: Public Route Table
+          Value: Public RouteTable
       VpcId: !Ref VPC
 
   PublicRoute:
@@ -178,7 +178,7 @@ Resources:
   ALBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable HTTP/HTTPS access on port 80/443
+      GroupDescription: Enable access on ports 80/443
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '80'
@@ -210,7 +210,7 @@ Resources:
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable HTTP/HTTPS access via port 80/443 locked to alb SG.  SSH access via port 22 locked to SSH SG
+      GroupDescription: Enable access on ports 22/80/443 locked to relevant SG
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '80'
@@ -229,10 +229,10 @@ Resources:
           Value: WebServer Security Group
       VpcId: !Ref VPC
 
-  PublicHTTPSecurityGroup:
+  PublicSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable HTTP/HTTPS access 
+      GroupDescription: Enable HTTP/S public access 
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '80'
@@ -283,26 +283,26 @@ Outputs:
     Value: !Ref PrivateSubnet2
 
   ALBSecurityGroup:
-    Description: Application Load Balancer Security Group ID
+    Description: Application Load Balancer SG ID
     Export:
       Name: !Sub ${AWS::StackName}-ALBSecurityGroup
     Value: !Ref ALBSecurityGroup
 
   SSHSecurityGroup:
-    Description: SSH Security Group ID
+    Description: SSH SG ID
     Export:
       Name: !Sub ${AWS::StackName}-SSHSecurityGroup
     Value: !Ref SSHSecurityGroup
 
   WebServerSecurityGroup:
-    Description: Webserver Security Group ID
+    Description: Webserver SG ID
     Export:
       Name: !Sub ${AWS::StackName}-WebServerSecurityGroup
     Value: !Ref WebServerSecurityGroup
 
-  PublicHTTPSecurityGroup:
+  PublicSecurityGroup:
     Description: Public HTTP/S SG
     Export:
-      Name: !Sub ${AWS::StackName}-PublicHTTPSecurityGroup
-    Value: !Ref PublicHTTPSecurityGroup
+      Name: !Sub ${AWS::StackName}-PublicSecurityGroup
+    Value: !Ref PublicSecurityGroup
 

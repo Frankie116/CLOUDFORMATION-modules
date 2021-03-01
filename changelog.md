@@ -4,3 +4,7 @@ created initial configs
 
 Changelog-002
     Enabled ec2 to use public subnet in vpc.
+
+Changelog-003
+    Updated vpc, ec2 & alb code
+    Added nat gateway code

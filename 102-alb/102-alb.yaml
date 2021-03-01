@@ -1,4 +1,3 @@
-
 ---
 # ---------------------------------------------------------------------------------------------------
 # version  1.0
@@ -10,7 +9,7 @@
 # 100-vpc.yaml
 
 AWSTemplateFormatVersion: 2010-09-09
-Description: This template creates an ALB
+Description: This template creates an ALB.  The code is part of a standard modular infrastructure library.
 
 
 
@@ -31,15 +30,16 @@ Parameters:
   ExportVpcStackName:
     Description: The name of the vpc stack that exports values
     Type: String
+    Default: MyVpc
 
 
 
 Resources:
 
-  ApplicationLoadBalancer:
+  ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: MyApplicationLoadBalancer
+      Name: MyALB
       SecurityGroups:
         - Fn::ImportValue: !Sub ${ExportVpcStackName}-ALBSecurityGroup
       Subnets: 
@@ -52,7 +52,7 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup
-      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      LoadBalancerArn: !Ref ALB
       Port: 80
       Protocol: HTTP
 
@@ -82,14 +82,14 @@ Outputs:
       Name: !Sub ${AWS::StackName}-ALBTargetGroup
     Value: !Ref ALBTargetGroup
 
-  ApplicationLoadBalancerDnsName:
-    Description: Application Load Balancer DNS Name
+  ALBDnsName:
+    Description: ALB DNS Name
     Export:
-      Name: !Sub ${AWS::StackName}-ApplicationLoadBalancerDnsName
-    Value: !GetAtt ApplicationLoadBalancer.DNSName
+      Name: !Sub ${AWS::StackName}-ALBDnsName
+    Value: !GetAtt ALB.DNSName
 
-  ApplicationLoadBalancerZoneID:
-    Description: Application Load Balancer Canonical Hosted Zone ID
+  ALBZoneID:
+    Description: ALB Canonical Hosted Zone ID
     Export:
-      Name: !Sub ${AWS::StackName}-ApplicationLoadBalancerZoneID
-    Value: !GetAtt ApplicationLoadBalancer.CanonicalHostedZoneID
+      Name: !Sub ${AWS::StackName}-ALBZoneID
+    Value: !GetAtt ALB.CanonicalHostedZoneID
