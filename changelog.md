@@ -1,6 +1,6 @@
 BRANCH "master" 
 Changelog-001
-created initial configs
+    created initial configs
 
 Changelog-002
     Enabled ec2 to use public subnet in vpc.
@@ -8,3 +8,6 @@ Changelog-002
 Changelog-003
     Updated vpc, ec2 & alb code
     Added nat gateway code
+    
+Changelog-004
+    Added rds 

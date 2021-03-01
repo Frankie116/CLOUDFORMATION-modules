@@ -8,7 +8,6 @@ Each module encapuslates an area of AWS infrastructure that can be put together 
 
 This repo is a work in progress.
 
-
 Author: Frank Effrim-Botchey
 
 --------------------------------------------------------------
