@@ -2,13 +2,13 @@
 # ---------------------------------------------------------------------------------------------------
 # version  1.0
 # Library: https://github.com/Frankie116/my-library.git
-# Creates an EC2 instance
+# Creates an EC2 instance in public subnet with SSH access only
 # ---------------------------------------------------------------------------------------------------
 
 # req:
 # 100-vpc.yaml
 
-Description: This template creates a simple 'hello world' application hosted on a single ec2 instance in a public subnet in the default vpc.
+Description: This template creates an ec2 instance.  The code is part of a standard modular infrastructure library.
 
 
 
@@ -55,12 +55,13 @@ Parameters:
     ExportVpcStackName:
         Description: The name of the vpc stack that exports values
         Type: String
+        Default: MyVpc
 
 
 
 Resources:  
 
-  WebServer:
+  Jumpbox:
     Type: AWS::EC2::Instance
     Properties:
       ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
@@ -68,26 +69,27 @@ Resources:
       NetworkInterfaces:
       - GroupSet:
         - Fn::ImportValue:
-            Fn::Sub: "${ExportVpcStackName}-PublicHTTPSecurityGroup"
+            Fn::Sub: "${ExportVpcStackName}-SSHSecurityGroup"
         AssociatePublicIpAddress: 'true'
         DeviceIndex: '0'
         DeleteOnTermination: 'true'
         SubnetId:
           Fn::ImportValue:
             Fn::Sub: "${ExportVpcStackName}-PublicSubnet1"
-      UserData: 
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y httpd
-          systemctl start httpd.service
-          systemctl enable httpd.service
-          echo "<h1>Hello World from $(hostname -f) </h1>" > /var/www/html/index.html      
+    #   UserData: 
+    #     Fn::Base64: |
+    #       #!/bin/bash
+    #       yum update -y
+    #       yum install -y httpd
+    #       systemctl start httpd.service
+    #       systemctl enable httpd.service
+    #       echo "<h1>Hello World from $(hostname -f) </h1>" > /var/www/html/index.html      
 
+    # Add SSH Keypair...
 
 
 Outputs:
 
   PublicIP:
     Description: Public IP address of the newly created EC2 instance
-    Value: !Sub http://${WebServer.PublicIp} 
+    Value: !Sub http://${Jumpbox.PublicIp} 
