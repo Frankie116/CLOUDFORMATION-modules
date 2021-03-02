@@ -32,3 +32,6 @@ Changelog-006
 
 Changelog-007
     Added ssm templates
+
+Changelog-008
+    Added intital configs for ecs (unfinished)
