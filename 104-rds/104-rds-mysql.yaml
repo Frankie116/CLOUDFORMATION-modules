@@ -42,7 +42,7 @@ Parameters:
   ExportVpcStackName:
     Description: The name of the vpc stack that exports values
     Type: String
-    Default: MyVpc
+    Default: vpc
 
   DBInstanceIdentifier:
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'

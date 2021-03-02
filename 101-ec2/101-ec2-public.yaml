@@ -55,7 +55,7 @@ Parameters:
     ExportVpcStackName:
         Description: The name of the vpc stack that exports values
         Type: String
-        Default: MyVpc
+        Default: vpc
 
 
 
