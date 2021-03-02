@@ -73,14 +73,12 @@ Resources:
       KeyName: !Ref KeyName
       NetworkInterfaces:
       - GroupSet:
-        - Fn::ImportValue:
-            Fn::Sub: "${ExportVpcStackName}-SSHSecurityGroup"
+        - Fn::ImportValue: !Sub "${ExportVpcStackName}-SSHSecurityGroup"
         AssociatePublicIpAddress: 'true'
         DeviceIndex: '0'
         DeleteOnTermination: 'true'
         SubnetId:
-          Fn::ImportValue:
-            Fn::Sub: "${ExportVpcStackName}-PublicSubnet1"
+          Fn::ImportValue: !Sub "${ExportVpcStackName}-PublicSubnet1"
 
 
 

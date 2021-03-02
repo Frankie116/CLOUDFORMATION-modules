@@ -70,16 +70,14 @@ Resources:
       InstanceType: t2.micro
       NetworkInterfaces:
       - GroupSet:
-        - Fn::ImportValue:
-            Fn::Sub: "${ExportVpcStackName}-WebServerSecurityGroup"
+        - Fn::ImportValue: !Sub "${ExportVpcStackName}-WebServerSecurityGroup"
         AssociatePublicIpAddress: 'true'
         DeviceIndex: '0'
         DeleteOnTermination: 'true'
         SubnetId:
-          Fn::ImportValue:
-            Fn::Sub: "${ExportVpcStackName}-PrivateSubnet1"
+          Fn::ImportValue: !Sub "${ExportVpcStackName}-PrivateSubnet1"
       UserData: 
-        Fn::Base64: |
+        !Base64 |
           #!/bin/bash
           yum update -y
           yum install -y httpd
