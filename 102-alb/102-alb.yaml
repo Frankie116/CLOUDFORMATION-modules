@@ -6,7 +6,11 @@
 # ---------------------------------------------------------------------------------------------------
 
 # req:
-# 100-vpc.yaml
+# 100-vpc
+# 101-ec2
+# 103-nat
+
+
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: This template creates an ALB.  The code is part of a standard modular infrastructure library.
@@ -22,6 +26,11 @@ Metadata:
           default: "Export VPC Stack Name"
         Parameters:
           - ExportVpcStackName
+      - 
+        Label: 
+          default: "Export Webserver Stack Name"
+        Parameters:
+          - ExportWebServerStackName
 
 
 
@@ -30,7 +39,12 @@ Parameters:
   ExportVpcStackName:
     Description: The name of the vpc stack that exports values
     Type: String
-    Default: MyVpc
+    Default: vpc
+
+  ExportWebServerStackName:
+    Description: The name of the ec2 stack that exports values
+    Type: String
+    Default: ec2
 
 
 
@@ -69,6 +83,9 @@ Resources:
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 5
+      Targets:
+        - Id:
+            Fn::ImportValue: !Sub ${ExportWebServerStackName}-WebServer
       VpcId:
         Fn::ImportValue: !Sub ${ExportVpcStackName}-VPC
 

@@ -16,7 +16,8 @@ Description: This template creates a nat gateway in each the public subnets.  Th
 Parameters:
   ExportVpcStackName:
     Description: The name of the vpc stack that exports values
-    Type: String  
+    Type: String 
+    Default: vpc
 
 
 
