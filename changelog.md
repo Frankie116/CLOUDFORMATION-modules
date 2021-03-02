@@ -1,4 +1,5 @@
 BRANCH "master" 
+
 Changelog-001
     created initial configs
 
@@ -29,3 +30,5 @@ Changelog-006
     modified:   101-ec2/101-ec2-public.yaml
     modified:   102-alb/102-alb.yaml
 
+Changelog-007
+    Added ssm templates
