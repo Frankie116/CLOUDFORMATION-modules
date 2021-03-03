@@ -34,4 +34,8 @@ Changelog-007
     Added ssm templates
 
 Changelog-008
-    Added intital configs for ecs (unfinished)
+    Added intital configs for ecs (wip)
+
+Changelog-009
+    Restructured folders
+    Re-configured ecs-fargate configs (wip)
