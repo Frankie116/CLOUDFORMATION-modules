@@ -34,8 +34,12 @@ Changelog-007
     Added ssm templates
 
 Changelog-008
-    Added intital configs for ecs (wip)
+    Added intital configs for ecs 
 
 Changelog-009
     Restructured folders
-    Re-configured ecs-fargate configs (wip)
+    Re-configuring ecs-fargate configs (wip)
+
+Changelog-010
+    Refactoring all modular code (wip)
+        - moving security groups from vpc to specific template.
