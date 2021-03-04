@@ -12,7 +12,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: This template creates a vpc with 2 public and 4 private subnets.  The code is part of a standard modular infrastructure library.
 
 
-
 Metadata:
 
   AWS::CloudFormation::Interface: 
@@ -37,8 +36,6 @@ Metadata:
           default: "SSH CIDR"
         Parameters: 
           - SSHLocation
-
-
 
 
 Parameters:
@@ -86,8 +83,6 @@ Parameters:
     MaxLength: '18'
     MinLength: '9'
     Type: String
-
-
 
 
 Resources:
@@ -209,93 +204,74 @@ Resources:
           Value: Private Subnet 4 | Database Tier
       VpcId: !Ref VPC
 
-  ALBSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Enable access on ports 80/443
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: "0.0.0.0/0"
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: ALB Security Group
-      VpcId: !Ref VPC
+  # SSHSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     GroupDescription: Enable SSH access
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: !Ref SSHLocation
+  #     Tags:
+  #       - Key: Name
+  #         Value: SSH Security Group
+  #     VpcId: !Ref VPC
 
-  SSHSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Enable SSH access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: !Ref SSHLocation
-      Tags:
-        - Key: Name
-          Value: SSH Security Group
-      VpcId: !Ref VPC
+  # WebServerSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     GroupDescription: Enable access on ports 22/80/443 locked to relevant SG
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '80'
+  #         ToPort: '80'
+  #         SourceSecurityGroupId:
+  #           Fn::ImportValue: !Sub ${ExportVpcStackName}-ALBSecurityGroup
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         SourceSecurityGroupId: !Ref ALBSecurityGroup
+  #       - IpProtocol: tcp
+  #         FromPort: '22'
+  #         ToPort: '22'
+  #         SourceSecurityGroupId: !Ref SSHSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: WebServer Security Group
+  #     VpcId: !Ref VPC
 
-  WebServerSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Enable access on ports 22/80/443 locked to relevant SG
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          SourceSecurityGroupId: !Ref ALBSecurityGroup
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          SourceSecurityGroupId: !Ref ALBSecurityGroup
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          SourceSecurityGroupId: !Ref SSHSecurityGroup
-      Tags:
-        - Key: Name
-          Value: WebServer Security Group
-      VpcId: !Ref VPC
+  # DBSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     GroupDescription: Open database for access
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '3306'
+  #         ToPort: '3306'
+  #         SourceSecurityGroupId: !Ref WebServerSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: DataBase Security Group
+  #     VpcId: !Ref VPC
 
-  DBSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Open database for access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '3306'
-          ToPort: '3306'
-          SourceSecurityGroupId: !Ref WebServerSecurityGroup
-      Tags:
-        - Key: Name
-          Value: DataBase Security Group
-      VpcId: !Ref VPC
-
-  PublicSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupDescription: Enable HTTP/S public access  
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: '0.0.0.0/0'
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: '0.0.0.0/0'
-      Tags:
-        - Key: Name
-          Value: Public HTTP/S SG
-      VpcId: !Ref VPC
-
-
+  # PublicSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     GroupDescription: Enable HTTP/S public access  
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '80'
+  #         ToPort: '80'
+  #         CidrIp: '0.0.0.0/0'
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         CidrIp: '0.0.0.0/0'
+  #     Tags:
+  #       - Key: Name
+  #         Value: Public HTTP/S SG
+  #     VpcId: !Ref VPC
 
 
 Outputs:
@@ -342,32 +318,14 @@ Outputs:
       Name: !Sub ${AWS::StackName}-PrivateSubnet4
     Value: !Ref PrivateSubnet4
 
-  ALBSecurityGroup:
-    Description: Application Load Balancer Security Group ID
-    Export:
-      Name: !Sub ${AWS::StackName}-ALBSecurityGroup
-    Value: !Ref ALBSecurityGroup
+  # DBSecurityGroup:
+  #   Description: DataBase Security Group ID
+  #   Export:
+  #     Name: !Sub ${AWS::StackName}-DBSecurityGroup
+  #   Value: !Ref DBSecurityGroup
 
-  SSHSecurityGroup:
-    Description: SSH Security Group ID
-    Export:
-      Name: !Sub ${AWS::StackName}-SSHSecurityGroup
-    Value: !Ref SSHSecurityGroup
-
-  WebServerSecurityGroup:
-    Description: Webserver Security Group ID
-    Export:
-      Name: !Sub ${AWS::StackName}-WebServerSecurityGroup
-    Value: !Ref WebServerSecurityGroup
-
-  DBSecurityGroup:
-    Description: DataBase Security Group ID
-    Export:
-      Name: !Sub ${AWS::StackName}-DBSecurityGroup
-    Value: !Ref DBSecurityGroup
-
-  PublicSecurityGroup:
-    Description: Public HTTP/S SG
-    Export:
-      Name: !Sub ${AWS::StackName}-PublicSecurityGroup
-    Value: !Ref PublicSecurityGroup
+  # PublicSecurityGroup:
+  #   Description: Public HTTP/S SG
+  #   Export:
+  #     Name: !Sub ${AWS::StackName}-PublicSecurityGroup
+  #   Value: !Ref PublicSecurityGroup

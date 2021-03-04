@@ -9,74 +9,118 @@
 # ---------------------------------------------------------------------------------------------------
 
 # req:
-# none
+# 100-vpc
+# 102-alb
+# 102-alb-listeners
+# 106-sg
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: An example CloudFormation template for Fargate.
 
 
-
+## ---------------------------------------------------------------------------------
 Parameters:
-  VPC:
-    Type: AWS::EC2::VPC::Id
-  SubnetA:
-    Type: AWS::EC2::Subnet::Id
-  SubnetB:
-    Type: AWS::EC2::Subnet::Id
-  Certificate:
-    Type: String
-    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
-    Default: 'arn:aws:acm:region:123456789012:certificate/00000000-0000-0000-0000-000000000000'
+  
   Image:
     Type: String
     # Update with the Docker image. 
     Default: docker.io/frankie116/lab045-docker-image
+
   ServiceName:
     Type: String
     # update with the name of the service
     Default: MyService
+
   ContainerPort:
     Type: Number
     Default: 80
-  LoadBalancerPort:
-    Type: Number
-    Default: 443
-  HealthCheckPath:
-    Type: String
-    Default: /
+
   HealthCheckGracePeriod:
     Type: Number
     Default: 30
 
-
-
   HostedZoneName:
     Type: String
     Default: company.com
+
   Subdomain:
     Type: String
     Default: myservice
+
   # for autoscaling
   MinContainers:
     Type: Number
     Default: 2
   # for autoscaling
+
   MaxContainers:
     Type: Number
     Default: 10
+
   # target CPU utilization (%)
   AutoScalingTargetValue:
     Type: Number
     Default: 50
 
+  ExportedVpc:
+    Description: The name of the vpc stack that exports values
+    Type: String
+    Default: vpc
 
-Resources:
+  ExportedAlb:
+    Description: The name of the alb stack that exports values
+    Type: String
+    Default: alb
+
+  ExportedAlbSg:
+    Description: The name of the alb stack that exports values
+    Type: String
+    Default: app1-alb-sg
+
+  ExportedListeners:
+    Description: The name of the listeners stack that exports values
+    Type: String
+    Default: app1-listeners
 
 ## ---------------------------------------------------------------------------------
+Resources:
+
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Join ['', [!Ref ServiceName, Cluster]]
+
+## ---------------------------------------------------------------------------------
+  Service:
+    Type: AWS::ECS::Service
+    # This dependency is needed so that the load balancer is setup correctly in time
+    # DependsOn:
+    #   - Fn::ImportValue: !Sub ${ExportAlb}-ListenerHTTP
+    Properties: 
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 2
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: !Ref HealthCheckGracePeriod
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: ENABLED
+          Subnets:
+            - Fn::ImportValue: !Sub ${ExportedVpc}-PublicSubnet1
+            - Fn::ImportValue: !Sub ${ExportedVpc}-PublicSubnet2
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Ref ServiceName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: 
+            Fn::ImportValue: !Sub ${ExportedListeners}-TargetGroup
 
 ## ---------------------------------------------------------------------------------
   TaskDefinition:
@@ -122,6 +166,20 @@ Resources:
               awslogs-stream-prefix: ecs
 
 ## ---------------------------------------------------------------------------------
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Join ['', [!Ref ServiceName, ContainerSecurityGroup]]
+      VpcId:
+        Fn::ImportValue: !Sub ${ExportedVpc}-VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          SourceSecurityGroupId:
+            Fn::ImportValue: !Sub ${ExportedAlbSg}-ALBSecurityGroup 
+
+## ---------------------------------------------------------------------------------
   # A role needed by ECS
   ExecutionRole:
     Type: AWS::IAM::Role
@@ -152,126 +210,6 @@ Resources:
       # Policies:
       #   -
 
-  # A role needed for auto scaling
-  AutoScalingRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join ['', [!Ref ServiceName, AutoScalingRole]]
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
-
-
-## ---------------------------------------------------------------------------------
-  ContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Join ['', [!Ref ServiceName, ContainerSecurityGroup]]
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref ContainerPort
-          ToPort: !Ref ContainerPort
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
-
-  LoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Join ['', [!Ref ServiceName, LoadBalancerSecurityGroup]]
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref LoadBalancerPort
-          ToPort: !Ref LoadBalancerPort
-          CidrIp: 0.0.0.0/0
-
-
-## ---------------------------------------------------------------------------------
-  Service:
-    Type: AWS::ECS::Service
-    # This dependency is needed so that the load balancer is setup correctly in time
-    DependsOn:
-      - ListenerHTTPS
-    Properties: 
-      ServiceName: !Ref ServiceName
-      Cluster: !Ref Cluster
-      TaskDefinition: !Ref TaskDefinition
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-      DesiredCount: 2
-      # This may need to be adjusted if the container takes a while to start up
-      HealthCheckGracePeriodSeconds: !Ref HealthCheckGracePeriod
-      LaunchType: FARGATE
-      NetworkConfiguration: 
-        AwsvpcConfiguration:
-          # change to DISABLED if you're using private subnets that have access to a NAT gateway
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !Ref SubnetA
-            - !Ref SubnetB
-          SecurityGroups:
-            - !Ref ContainerSecurityGroup
-      LoadBalancers:
-        - ContainerName: !Ref ServiceName
-          ContainerPort: !Ref ContainerPort
-          TargetGroupArn: !Ref TargetGroup
-
-
-## ---------------------------------------------------------------------------------
-  TargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: !Join ['', [!Ref ServiceName, TargetGroup]]
-      VpcId: !Ref VPC
-      # will look for a 200 status code by default unless specified otherwise
-      HealthCheckPath: !Ref HealthCheckPath
-      HealthCheckIntervalSeconds: 10
-      HealthCheckTimeoutSeconds: 5
-      UnhealthyThresholdCount: 2
-      HealthyThresholdCount: 2
-      Port: !Ref ContainerPort
-      Protocol: HTTP
-      TargetType: ip
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 60 # default is 300
-      
-      
-  ListenerHTTPS:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref TargetGroup     
-      LoadBalancerArn: !Ref LoadBalancer
-      Port: !Ref LoadBalancerPort
-      Protocol: HTTP
-      # Protocol: HTTPS
-      # Certificates:
-      #   - CertificateArn: !Ref Certificate
-
-
-  LoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      LoadBalancerAttributes:
-      Name: !Join ['', [!Ref ServiceName, LoadBalancer]]
-        # this is the default, but is specified here in case it needs to be changed
-        - Key: idle_timeout.timeout_seconds
-          Value: 60
-      Scheme: internet-facing  # "internal" is also an option
-      SecurityGroups:
-        - !Ref LoadBalancerSecurityGroup
-      Subnets:
-        - !Ref SubnetA
-        - !Ref SubnetB
-
 ## ---------------------------------------------------------------------------------
   DNSRecord:
     Type: AWS::Route53::RecordSet
@@ -280,9 +218,10 @@ Resources:
       Name: !Join ['', [!Ref Subdomain, ., !Ref HostedZoneName, .]]
       Type: A
       AliasTarget:
-        DNSName: !GetAtt LoadBalancer.DNSName
-        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
-
+        DNSName: 
+          Fn::ImportValue: !Sub ${ExportedAlb}-AlbDnsName
+        HostedZoneId: 
+          Fn::ImportValue: !Sub ${ExportedAlb}-AlbZoneID
 
 ## ---------------------------------------------------------------------------------
   LogGroup:
@@ -316,8 +255,21 @@ Resources:
         # Keep things at or lower than 50% CPU utilization, for example
         TargetValue: !Ref AutoScalingTargetValue
 
+  AutoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['', [!Ref ServiceName, AutoScalingRole]]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
 
+## ---------------------------------------------------------------------------------
 Outputs:
   Endpoint:
     Description: Endpoint
-    Value: !Join ['', ['http://', !Ref DNSRecord]]
+    Value: !Join ['', ['http://', !Ref DNSRecord, ':', !Ref ContainerPort]]
