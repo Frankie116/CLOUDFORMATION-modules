@@ -38,8 +38,11 @@ Changelog-008
 
 Changelog-009
     Restructured folders
-    Re-configuring ecs-fargate configs (wip)
+    Re-configured ecs-fargate configs 
 
 Changelog-010
-    Refactoring all modular code (wip)
-        - moving security groups from vpc to specific template.
+    Refactored all modular code 
+        - moved security groups from vpc to specific template.
+
+Changelog-011
+    Refactored ecs resource stacks
