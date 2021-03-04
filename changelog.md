@@ -46,3 +46,7 @@ Changelog-010
 
 Changelog-011
     Refactored ecs resource stacks
+
+Changelog-012
+    created unified templates that use nested stacks
+    started to refactor 200-main.yaml to use nested stacks
