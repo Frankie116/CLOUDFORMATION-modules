@@ -131,7 +131,7 @@ Resources:
         TargetPort: !Ref EcsTargetPort
         TargetType: !Ref EcsTargetType
         HealthCheckPath: !Ref EcsHealthCheckPath
-      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/unified-stacks/app3/303-listeners.yaml
+      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/nested-stacks/303-listeners.yaml
 
   Cluster:
     Type: AWS::ECS::Cluster

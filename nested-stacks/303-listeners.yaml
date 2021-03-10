@@ -86,7 +86,7 @@ Resources:
         AlbSourceIp2: !Ref SourceIp2
         AlbVpc: !Ref Vpc
         AlbSubnets: !Join [",", !Ref Subnets]
-      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/unified-stacks/app3/302-alb.yaml
+      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/nested-stacks/302-alb.yaml
 
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
