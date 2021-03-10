@@ -1,0 +1,165 @@
+---
+# ---------------------------------------------------------------------------------------------------
+# File: 303-listeners.yaml
+# Version: 3.0
+# Library: https://github.com/Frankie116/my-library.git
+# Summary: Creates an application load balancer, alb security group,listeners & target group using nested stacks.  
+# User can choose an existing VPC when creating this stack.
+#
+# Dependant stacks created from code located in s3:
+# 302-alb.yaml
+# 301-sg.ymal
+# ---------------------------------------------------------------------------------------------------
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates an ALB.  The code is part of a standard modular infrastructure library.
+
+## ----------------------------------------------------------------------
+Metadata:
+
+  AWS::CloudFormation::Interface: 
+    ParameterGroups:
+      - 
+        Label: 
+          default: "Network"
+        Parameters: 
+          - Vpc
+          - Subnets
+      - 
+        Label: 
+          default: "Security Group"
+        Parameters: 
+          - ListenerPort
+          - SourceIp1
+          - SourceIp2
+      - 
+        Label: 
+          default: "Target Group"
+        Parameters: 
+          - TargetPort
+          - TargetType
+          - HealthCheckPath
+
+## ----------------------------------------------------------------------
+Parameters:
+
+  Vpc:
+    Type: AWS::EC2::VPC::Id
+    Default: MainVpc
+
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  ListenerPort:
+    Type: Number
+    Default: 80
+
+  SourceIp1:
+    Type: String
+    Default: 0.0.0.0/0
+
+  SourceIp2:
+    Type: String
+    Default: 0.0.0.0/0
+
+  TargetPort:
+    Type: Number
+    Default: 80
+
+  TargetType:
+    Type: String
+    Default: instance
+
+  HealthCheckPath:
+    Type: String
+    Default: /
+
+## ---------------------------------------------------------------------------------
+Resources:
+
+  NestedAlb:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        AlbListenerPort: !Ref ListenerPort
+        AlbSourceIp1: !Ref SourceIp1
+        AlbSourceIp2: !Ref SourceIp2
+        AlbVpc: !Ref Vpc
+        AlbSubnets: !Join [",", !Ref Subnets]
+      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/unified-stacks/app3/302-alb.yaml
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: NestedAlb
+    Properties:
+      Name: MyTargetGroup
+      VpcId: !Ref Vpc
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 5
+      HealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200,302
+      Port:  !Ref TargetPort
+      Protocol: HTTP
+      TargetType: !Ref TargetType
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+  
+  ListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: NestedAlb
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !GetAtt NestedAlb.Outputs.Alb
+      Port: !Ref ListenerPort
+      Protocol: HTTP
+  
+ ## ---------------------------------------------------------------------------------     
+Outputs:
+
+  SgAlb:
+    Description: Security Group ID
+    Value: !GetAtt NestedAlb.Outputs.SgAlb
+    Export:
+      Name: !Sub ${AWS::StackName}-SgAlb
+
+  Alb:
+    Description: Alb ID
+    Value: !GetAtt NestedAlb.Outputs.Alb
+    Export:
+      Name: !Sub ${AWS::StackName}-Alb
+
+  AlbDnsName:
+    Description: Alb DNS Name
+    Value: !GetAtt NestedAlb.Outputs.AlbDnsName
+    Export:
+      Name: !Sub ${AWS::StackName}-AlbDnsName
+    
+
+  AlbZoneID:
+    Description: Alb Canonical Hosted Zone ID
+    Value: !GetAtt NestedAlb.Outputs.AlbZoneID
+    Export:
+      Name: !Sub ${AWS::StackName}-AlbZoneID
+    
+  ListenerHTTP:
+    Description: Application Load Balancer Security Group ID
+    Value: !Ref ListenerHTTP
+    Export:
+      Name: !Sub ${AWS::StackName}-ListenerHTTP
+    
+  TargetGroup:
+    Description: Webserver target group
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroup
+    
+
+
+
+  
