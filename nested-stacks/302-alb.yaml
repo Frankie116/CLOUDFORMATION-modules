@@ -65,7 +65,7 @@ Resources:
         SgSourceIp1: !Ref AlbSourceIp1
         SgSourceIp2: !Ref AlbSourceIp2
         SgVpc: !Ref AlbVpc
-      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/unified-stacks/app3/301-sg.yaml
+      TemplateURL: https://my-cloudformation-repo.s3.eu-west-2.amazonaws.com/nested-stacks/301-sg.yaml
 
   Alb:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer

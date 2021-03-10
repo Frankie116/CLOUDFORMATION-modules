@@ -57,3 +57,5 @@ Changelog-013
 Changelog-014
     refactored ecs fargate application into re-usable nested stack templates.
     
+Changelog-014
+    updated s3 url bucket names that stores the nested stacks
