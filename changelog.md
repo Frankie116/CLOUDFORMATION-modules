@@ -50,3 +50,10 @@ Changelog-011
 Changelog-012
     created unified templates that use nested stacks
     started to refactor 200-main.yaml to use nested stacks
+
+Changelog-013
+    created applications folder
+
+Changelog-014
+    refactored ecs fargate application into re-usable nested stack templates.
+    
