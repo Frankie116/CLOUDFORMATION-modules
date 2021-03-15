@@ -57,5 +57,19 @@ Changelog-013
 Changelog-014
     refactored ecs fargate application into re-usable nested stack templates.
     
-Changelog-014
+Changelog-015
     updated s3 url bucket names that stores the nested stacks
+
+Changelog-016
+    refactored ecs fargate application into re-usable nested stack templates.
+
+    new nested stacks are:
+    nested-stacks/401-alb.yaml
+    nested-stacks/402-iam-roles.yaml
+    nested-stacks/403-dns.yaml
+    nested-stacks/404-fargate.yaml
+    nested-stacks/405-asg.yaml
+
+    root template is:
+    applications/app04-nestedroot-fargate.yaml
+
