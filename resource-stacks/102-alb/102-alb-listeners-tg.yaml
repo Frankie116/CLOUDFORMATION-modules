@@ -58,19 +58,7 @@ Parameters:
 
 Resources:
 
-  ListenerHTTP:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref TargetGroup
-      LoadBalancerArn: 
-        Fn::ImportValue: !Sub ${ExportedAlb}-ALB
-      Port: 
-        Fn::ImportValue: !Sub ${ExportedAlbSg}-ListenerPort
-      Protocol: HTTP
-
-  TargetGroup:
+   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: MyTargetGroup
@@ -89,7 +77,19 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 60 # default is 300
-      
+  
+  ListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: 
+        Fn::ImportValue: !Sub ${ExportedAlb}-ALB
+      Port: 
+        Fn::ImportValue: !Sub ${ExportedAlbSg}-ListenerPort
+      Protocol: HTTP
+ 
 Outputs:
 
   ListenerHTTP:
